@@ -49,13 +49,13 @@ def main():
         elif opcion == "2":
             actualizar_pais(paises)
         elif opcion == "3":
-            print(">> Buscar país (próximamente)")
+            buscar_pais_por_nombre(paises)
         elif opcion == "4":
-            print(">> Filtrar países (próximamente)")
+            filtrar_paises(paises)
         elif opcion == "5":
-            print(">> Ordenar países (próximamente)")
+            ordenar_paises(paises)
         elif opcion == "6":
-            print(">> Estadísticas (próximamente)")
+            mostrar_estadisticas(paises)
         elif opcion == "0":
             print("Saliendo del programa.")
             break
@@ -148,4 +148,138 @@ def actualizar_pais(paises):
     print(f"País '{pais_encontrado['nombre']}' actualizado correctamente.")
 
 
-main()
+# =========================================================================
+# FUNCIONES DESARROLLADAS POR MENDIZABALGONZA
+# =========================================================================
+
+def buscar_pais_por_nombre(paises):
+    print("\n--- BUSCAR PAÍS ---")
+    busqueda = input("Ingrese el nombre (o parte del nombre) a buscar: ").strip().lower()
+    
+    encontrados = []
+    for pais in paises:
+        if busqueda in pais["nombre"].lower():
+            encontrados.append(pais)
+            
+    if encontrados:
+        print(f"\nSe encontraron {len(encontrados)} coincidencia(s):")
+        for p in encontrados:
+            print(f"- {p['nombre']} | Continente: {p['continente']} | Población: {p['poblacion']} | Superficie: {p['superficie']} km²")
+    else:
+        print("❌ No se encontraron países que coincidan con la búsqueda.")
+
+def filtrar_paises(paises):
+    if not paises:
+        print("⚠️ No hay datos cargados para filtrar.")
+        return
+
+    print("\n--- OPCIONES DE FILTRADO ---")
+    print("1. Por Continente")
+    print("2. Por Rango de Población")
+    print("3. Por Rango de Superficie")
+    opcion = input("Seleccione una opción de filtrado: ").strip()
+
+    filtrados = []
+
+    if opcion == "1":
+        continente_buscar = input("Ingrese el continente a filtrar: ").strip().lower()
+        filtrados = [p for p in paises if p["continente"].lower() == continente_buscar]
+    elif opcion == "2":
+        try:
+            min_pob = int(input("Población MÍNIMA: "))
+            max_pob = int(input("Población MÁXIMA: "))
+            filtrados = [p for p in paises if min_pob <= p["poblacion"] <= max_pob]
+        except ValueError:
+            print("⚠️ Error: Ingrese números enteros válidos.")
+            return
+    elif opcion == "3":
+        try:
+            min_sup = int(input("Superficie MÍNIMA (km²): "))
+            max_sup = int(input("Superficie MÁXIMA (km²): "))
+            filtrados = [p for p in paises if min_sup <= p["superficie"] <= max_sup]
+        except ValueError:
+            print("⚠️ Error: Ingrese números enteros válidos.")
+            return
+    else:
+        print("⚠️ Opción de filtrado inválida.")
+        return
+
+    if filtrados:
+        print(f"\nSe encontraron {len(filtrados)} país(es):")
+        for p in filtrados:
+            print(f"- {p['nombre']} | {p['continente']} | Pob: {p['poblacion']} | Sup: {p['superficie']} km²")
+    else:
+        print("❌ No se encontraron países con ese criterio.")
+
+def ordenar_paises(paises):
+    if not paises:
+        print("⚠️ No hay datos cargados para ordenar.")
+        return
+
+    print("\n--- OPCIONES DE ORDENAMIENTO ---")
+    print("1. Por Nombre")
+    print("2. Por Población")
+    print("3. Por Superficie")
+    opcion_campo = input("Seleccione campo para ordenar: ").strip()
+
+    if opcion_campo == "1":
+        clave_orden = lambda x: x["nombre"].lower()
+    elif opcion_campo == "2":
+        clave_orden = lambda x: x["poblacion"]
+    elif opcion_campo == "3":
+        clave_orden = lambda x: x["superficie"]
+    else:
+        print("⚠️ Opción inválida.")
+        return
+
+    print("\n1. Ascendente (Menor a Mayor / A-Z)")
+    print("2. Descendente (Mayor a Menor / Z-A)")
+    opcion_sentido = input("Seleccione el sentido: ").strip()
+
+    if opcion_sentido == "1":
+        descendente = False
+    elif opcion_sentido == "2":
+        descendente = True
+    else:
+        print("⚠️ Opción inválida.")
+        return
+
+    lista_ordenada = sorted(paises, key=clave_orden, reverse=descendente)
+
+    print("\n--- RESULTADO DEL ORDENAMIENTO ---")
+    for p in lista_ordenada:
+        print(f"- {p['nombre']} | Pob: {p['poblacion']} | Sup: {p['superficie']} km² | {p['continente']}")
+
+def mostrar_estadisticas(paises):
+    if not paises:
+        print("⚠️ No hay datos cargados.")
+        return
+        
+    print("\n" + "="*30)
+    print("   ESTADÍSTICAS DEL DATASET")
+    print("="*30)
+    
+    pais_mayor_pob = max(paises, key=lambda x: x["poblacion"])
+    pais_menor_pob = min(paises, key=lambda x: x["poblacion"])
+    
+    print(f"📊 Mayor Población: {pais_mayor_pob['nombre']} ({pais_mayor_pob['poblacion']} hab.)")
+    print(f"📊 Menor Población: {pais_menor_pob['nombre']} ({pais_menor_pob['poblacion']} hab.)")
+    
+    total_pob = sum(p["poblacion"] for p in paises)
+    total_sup = sum(p["superficie"] for p in paises)
+    cant = len(paises)
+    
+    print(f"📈 Promedio de Población: {total_pob / cant:,.2f} hab.")
+    print(f"📈 Promedio de Superficie: {total_sup / cant:,.2f} km²")
+    
+    print("\n🗺️ Países por continente:")
+    conteo = {}
+    for p in paises:
+        conteo[p["continente"]] = conteo.get(p["continente"], 0) + 1
+    for cont, cant_p in conteo.items():
+        print(f"   - {cont}: {cant_p}")
+    print("="*30)
+
+
+if __name__ == "__main__":
+    main()
