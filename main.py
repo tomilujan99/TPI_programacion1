@@ -36,32 +36,6 @@ def mostrar_menu():
     print("0. Salir")
     print("==============================")
 
-def main():
-    paises = cargar_csv("paises.csv")
-    print(f"Se cargaron {len(paises)} países.")
-
-    while True:
-        mostrar_menu()
-        opcion = input("Elegí una opción: ").strip()
-
-        if opcion == "1":
-            agregar_pais(paises)
-        elif opcion == "2":
-            actualizar_pais(paises)
-        elif opcion == "3":
-            buscar_pais_por_nombre(paises)
-        elif opcion == "4":
-            filtrar_paises(paises)
-        elif opcion == "5":
-            ordenar_paises(paises)
-        elif opcion == "6":
-            mostrar_estadisticas(paises)
-        elif opcion == "0":
-            print("Saliendo del programa.")
-            break
-        else:
-            print("Opción inválida. Ingresá un número del 0 al 6.")
-
 def agregar_pais(paises):
     print("\n--- Agregar país ---")
     
@@ -222,8 +196,11 @@ def ordenar_paises(paises):
     print("3. Por Superficie")
     opcion_campo = input("Seleccione campo para ordenar: ").strip()
 
+    
     if opcion_campo == "1":
-        clave_orden = lambda x: x["nombre"].lower()
+        import locale
+        locale.setlocale(locale.LC_ALL, '')
+        clave_orden = lambda x: locale.strxfrm(x["nombre"].lower())
     elif opcion_campo == "2":
         clave_orden = lambda x: x["poblacion"]
     elif opcion_campo == "3":
@@ -279,6 +256,33 @@ def mostrar_estadisticas(paises):
     for cont, cant_p in conteo.items():
         print(f"   - {cont}: {cant_p}")
     print("="*30)
+
+
+def main():
+    paises = cargar_csv("paises.csv")
+    print(f"Se cargaron {len(paises)} países.")
+
+    while True:
+        mostrar_menu()
+        opcion = input("Elegí una opción: ").strip()
+
+        if opcion == "1":
+            agregar_pais(paises)
+        elif opcion == "2":
+            actualizar_pais(paises)
+        elif opcion == "3":
+            buscar_pais_por_nombre(paises)
+        elif opcion == "4":
+            filtrar_paises(paises)
+        elif opcion == "5":
+            ordenar_paises(paises)
+        elif opcion == "6":
+            mostrar_estadisticas(paises)
+        elif opcion == "0":
+            print("Saliendo del programa.")
+            break
+        else:
+            print("Opción inválida. Ingresá un número del 0 al 6.")
 
 
 if __name__ == "__main__":
