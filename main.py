@@ -1,5 +1,10 @@
 import csv
 
+import unicodedata
+
+def normalizar(texto):
+    return unicodedata.normalize("NFD", texto).encode("ascii", "ignore").decode("utf-8").lower()
+
 def cargar_csv(ruta):
     paises = []
     try:
@@ -157,7 +162,7 @@ def filtrar_paises(paises):
 
     if opcion == "1":
         continente_buscar = input("Ingrese el continente a filtrar: ").strip().lower()
-        filtrados = [p for p in paises if p["continente"].lower() == continente_buscar]
+        filtrados = [p for p in paises if normalizar(p["continente"]) == normalizar(continente_buscar)]
     elif opcion == "2":
         try:
             min_pob = int(input("Población MÍNIMA: "))
