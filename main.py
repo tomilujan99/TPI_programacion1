@@ -1,5 +1,47 @@
 import csv
 
+
+# =========================================================================
+# FUNCIONES AUXILIAR: VALIDACION
+# =========================================================================
+def solicitar_entero_positivo(mensaje):
+    """Solicita un número entero por consola, evitando campos vacíos y letras."""
+    while True:
+        try:
+            valor_input = input(mensaje).strip()
+            if not valor_input:  # Si le dan Enter sin escribir nada (campo vacío)
+                print(f"\nError: El campo no puede estar vacío. Intente de nuevo.\n")
+                continue
+                
+            valor = int(valor_input)
+            if valor <= 0:
+                print(f"\nError: El número debe ser mayor a 0. Intente de nuevo.\n")
+                continue
+                
+            return valor  # Si pasó todos los filtros, devuelve el número válido
+        except ValueError:
+            print(f"\nError: Debe ingresar un número entero válido (sin letras ni espacios).\n")
+
+
+def solicitar_texto_puro(mensaje):
+    """Solicita una cadena de texto por consola, asegurando que no esté vacía y contenga solo letras y espacios."""
+    while True:
+        valor_input = input(mensaje).strip()
+        
+        if not valor_input:
+            print("\nError: El campo no puede estar vacío. Intente de nuevo.")
+            continue
+            
+        # Reemplazamos los espacios temporariamente para verificar si el resto son solo letras
+        # Esto permite nombres compuestos como "Costa Rica" o "Cabo Verde"
+        if not valor_input.replace(" ", "").isalpha():
+            print("\nError: El nombre debe contener solo letras (sin números ni símbolos). Intente de nuevo.\n")
+            continue
+            
+        return valor_input.title()  # pasamos la primer letra a mayus independiente a lo que se haya ingresado (ej: "argentina" -> "Argentina")
+
+
+
 import unicodedata
 
 def normalizar(texto):
@@ -11,16 +53,24 @@ def cargar_csv(ruta):
         with open(ruta, encoding="utf-8-sig") as archivo:
             lector = csv.DictReader(archivo)
             for fila in lector:
-                paises.append({
-                    "nombre": fila["nombre"],
-                    "poblacion": int(fila["poblacion"]),
-                    "superficie": int(fila["superficie"]),
-                    "continente": fila["continente"]
-                })
+                # VALIDACIÓN: Si la fila viene vacía o le faltan columnas clave, la saltea
+                if not fila or fila.get("nombre") is None or fila.get("poblacion") is None:
+                    continue
+                
+                try:
+                    paises.append({
+                        "nombre": fila["nombre"].strip(),
+                        "poblacion": int(fila["poblacion"].strip()),    # Si falla, va al except de abajo
+                        "superficie": int(fila["superficie"].strip()),  # Si falla, va al except de abajo
+                        "continente": fila["continente"].strip()
+                    })
+                except (ValueError, TypeError):
+                    # Si una fila puntual tiene un dato roto, avisa pero no rompe todo el sistema
+                    print(f"Advertencia: Se omitió un registro en el CSV por datos inválidos o vacíos.")
+                    
     except FileNotFoundError:
         print("Error: no se encontró el archivo CSV.")
-    except ValueError:
-        print("Error: hay datos con formato incorrecto en el CSV.")
+        
     return paises
 
 def guardar_csv(ruta, paises):
@@ -42,15 +92,15 @@ def mostrar_menu():
     print("==============================")
 
 def agregar_pais(paises):
-    print("\n--- Agregar país ---")
+    print("\n--- Agregar país ---\n")
     
-    nombre = input("Nombre del país: ").strip()
+    nombre = solicitar_texto_puro("Nombre del país: ").strip()
     if nombre == "":
         print("Error: el nombre no puede estar vacío.")
         return
     
     try:
-        poblacion = int(input("Población: ").strip())
+        poblacion = solicitar_entero_positivo("Ingrese población: ")
         if poblacion <= 0:
             print("Error: la población debe ser un número positivo.")
             return
@@ -59,7 +109,7 @@ def agregar_pais(paises):
         return
     
     try:
-        superficie = int(input("Superficie en km²: ").strip())
+        superficie = solicitar_entero_positivo("Ingrese superficie (en km²): ")
         if superficie <= 0:
             print("Error: la superficie debe ser un número positivo.")
             return
@@ -83,11 +133,11 @@ def agregar_pais(paises):
     print(f"País '{nombre}' agregado correctamente.")  
 
 def actualizar_pais(paises):
-    print("\n--- Actualizar país ---")
+    print("\n--- Actualizar país ---\n")
     
-    nombre = input("Nombre del país a actualizar: ").strip()
+    nombre = solicitar_texto_puro("\nNombre del país a actualizar: ").strip()
     if nombre == "":
-        print("Error: el nombre no puede estar vacío.")
+        print("\nError: el nombre no puede estar vacío.")
         return
     
     # Buscar el país en la lista
@@ -98,22 +148,22 @@ def actualizar_pais(paises):
             break
     
     if pais_encontrado is None:
-        print(f"No se encontró ningún país con el nombre '{nombre}'.")
+        print(f"\nNo se encontró ningún país con el nombre '{nombre}'.")
         return
     
-    print(f"País encontrado: {pais_encontrado['nombre']} | Población: {pais_encontrado['poblacion']} | Superficie: {pais_encontrado['superficie']}")
+    print(f"\nPaís encontrado: {pais_encontrado['nombre']} | Población: {pais_encontrado['poblacion']} | Superficie: {pais_encontrado['superficie']}")
     
     try:
-        poblacion = int(input("Nueva población: ").strip())
+        poblacion = solicitar_entero_positivo(f"\nIngrese la nueva población: ")
         if poblacion <= 0:
-            print("Error: la población debe ser un número positivo.")
+            print(f"\nError: la población debe ser un número positivo.")
             return
     except ValueError:
-        print("Error: la población debe ser un número entero.")
+        print(f"\nError: la población debe ser un número entero.")
         return
     
     try:
-        superficie = int(input("Nueva superficie en km²: ").strip())
+        superficie = solicitar_entero_positivo(f"Ingrese la nueva superficie en km²: \n")
         if superficie <= 0:
             print("Error: la superficie debe ser un número positivo.")
             return
@@ -133,7 +183,7 @@ def actualizar_pais(paises):
 
 def buscar_pais_por_nombre(paises):
     print("\n--- BUSCAR PAÍS ---")
-    busqueda = input("Ingrese el nombre (o parte del nombre) a buscar: ").strip().lower()
+    busqueda = input("\nIngrese el nombre (o parte del nombre) a buscar: ").strip().lower()
     
     encontrados = []
     for pais in paises:
@@ -141,11 +191,11 @@ def buscar_pais_por_nombre(paises):
             encontrados.append(pais)
             
     if encontrados:
-        print(f"\nSe encontraron {len(encontrados)} coincidencia(s):")
+        print(f"\nSe encontraron {len(encontrados)} coincidencia(s):\n")
         for p in encontrados:
             print(f"- {p['nombre']} | Continente: {p['continente']} | Población: {p['poblacion']} | Superficie: {p['superficie']} km²")
     else:
-        print("❌ No se encontraron países que coincidan con la búsqueda.")
+        print("No se encontraron países que coincidan con la búsqueda.")
 
 def filtrar_paises(paises):
     if not paises:
